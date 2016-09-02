@@ -206,8 +206,8 @@ function Invoke-NSNitroRestApi {
         [Parameter(Mandatory=$true)] [string]$ResourceType,
         [Parameter(Mandatory=$false)] [string]$ResourceName,
         [Parameter(Mandatory=$false)] [string]$Action,
-        [Parameter(Mandatory=$false)] [ValidateScript({$OperationMethod -eq "GET"})] [hashtable]$Arguments=@{},
-        [Parameter(Mandatory=$false)] [ValidateScript({$OperationMethod -ne "GET"})] [hashtable]$Payload=@{},
+        [Parameter(Mandatory=$false)] [ValidateScript({($OperationMethod -eq "GET") -OR ($OperationMethod -eq "DELETE")})] [hashtable]$Arguments=@{},
+        [Parameter(Mandatory=$false)] [ValidateScript({($OperationMethod -ne "GET") -AND ($OperationMethod -ne "DELETE")})] [hashtable]$Payload=@{},
         [Parameter(Mandatory=$false)] [switch]$GetWarning=$false,
         [Parameter(Mandatory=$false)] [ValidateSet("EXIT", "CONTINUE", "ROLLBACK")] [string]$OnErrorAction="EXIT"
     )
@@ -219,7 +219,7 @@ function Invoke-NSNitroRestApi {
     if (-not [string]::IsNullOrEmpty($ResourceName)) {
         $uri += "/$ResourceName"
     }
-    if ($OperationMethod -ne "GET") {
+    if (($OperationMethod -ne "GET") -AND ($OperationMethod -ne "DELETE")) {
         if (-not [string]::IsNullOrEmpty($Action)) {
             $uri += "?action=$Action"
         }
@@ -236,7 +236,7 @@ function Invoke-NSNitroRestApi {
     }
     Write-Verbose "URI: $uri"
 
-    if ($OperationMethod -ne "GET") {
+    if (($OperationMethod -ne "GET") -AND ($OperationMethod -ne "DELETE")) {
         Write-Verbose "Building Payload"
         $warning = if ($GetWarning) { "YES" } else { "NO" }
         $hashtablePayload = @{}
@@ -256,7 +256,7 @@ function Invoke-NSNitroRestApi {
             ErrorVariable = "restError"
         }
 
-        if ($OperationMethod -ne "GET") {
+        if (($OperationMethod -ne "GET") -AND ($OperationMethod -ne "DELETE")) {
             $restParams.Add("Body",$jsonPayload)
         }
 
@@ -280,7 +280,7 @@ function Invoke-NSNitroRestApi {
 
     Write-Verbose "$($MyInvocation.MyCommand): Exit"
 
-    if ($OperationMethod -eq "GET") {
+    if (($OperationMethod -eq "GET") -OR ($OperationMethod -eq "DELETE")){
         return $response
     }
 }
